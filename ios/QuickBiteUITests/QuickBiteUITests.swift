@@ -172,8 +172,13 @@ final class QuickBiteUITests: XCTestCase {
         app.buttons["trackOrderButton"].tap()
 
         XCTAssertTrue(element("trackingStatus").waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Order placed"].exists)
-        XCTAssertTrue(app.staticTexts["Out for delivery"].exists, "all six steps are listed")
+        // Each tracker row is one accessibility element: "<step>, done|in progress|pending".
+        func step(_ title: String) -> XCUIElement {
+            app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
+        }
+        XCTAssertTrue(step("Order placed").waitForExistence(timeout: 3))
+        XCTAssertTrue(step("Out for delivery").exists, "all six steps are listed")
+        XCTAssertTrue(step("Delivered").exists)
     }
 
     func testOrdersTabRequiresSignIn() {
