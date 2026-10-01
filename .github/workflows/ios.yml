@@ -33,24 +33,30 @@ jobs:
   app:
     name: App build + unit tests + UI tests
     needs: packages
-    if: ${{ hashFiles('ios/QuickBite/App/AppDelegate.swift') != '' }}
     runs-on: macos-15
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+      - name: Check app sources exist
+        id: guard
+        run: test -f ios/QuickBite/App/AppDelegate.swift && echo "ok=true" >> "$GITHUB_OUTPUT" || echo "ok=false" >> "$GITHUB_OUTPUT"
       - name: Install XcodeGen
+        if: steps.guard.outputs.ok == 'true'
         run: brew install xcodegen
       - name: Generate project + install pods
+        if: steps.guard.outputs.ok == 'true'
         working-directory: ios
         run: |
           xcodegen generate
           pod install --repo-update
       - name: Cache SwiftPM
+        if: steps.guard.outputs.ok == 'true'
         uses: actions/cache@v4
         with:
           path: ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
           key: spm-${{ hashFiles('ios/project.yml') }}
       - name: Build for testing
+        if: steps.guard.outputs.ok == 'true'
         working-directory: ios
         run: |
           SIM=$(../ci/pick-simulator.sh)
@@ -59,12 +65,14 @@ jobs:
             -workspace QuickBite.xcworkspace -scheme QuickBite -destination "id=$SIM" \
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO -quiet
       - name: Unit tests
+        if: steps.guard.outputs.ok == 'true'
         working-directory: ios
         run: |
           ../ci/run-and-annotate.sh "Unit tests" xcodebuild test-without-building \
             -workspace QuickBite.xcworkspace -scheme QuickBite -destination "id=$SIM" \
             -derivedDataPath build -only-testing:QuickBiteTests CODE_SIGNING_ALLOWED=NO
       - name: UI tests
+        if: steps.guard.outputs.ok == 'true'
         working-directory: ios
         run: |
           ../ci/run-and-annotate.sh "UI tests" xcodebuild test-without-building \
