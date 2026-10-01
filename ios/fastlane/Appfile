@@ -1,0 +1,3 @@
+app_identifier("com.quickbite.app")
+# apple_id("you@example.com")   # only needed for interactive (non API-key) auth
+# team_id("ABCDE12345")         # your Apple Developer team id

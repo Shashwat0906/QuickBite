@@ -1,5 +1,8 @@
 #include "Shared.xcconfig"
 
+// CocoaPods settings (PODS_ROOT etc.). Optional so the project still opens before `pod install`.
+#include? "../Pods/Target Support Files/Pods-QuickBite/Pods-QuickBite.debug.xcconfig"
+
 // Simulator talks to the backend running on your Mac.
 // For a physical iPhone use your Mac's LAN IP, or the deployed Render URL.
 API_BASE_URL = http:/$()/localhost:4000

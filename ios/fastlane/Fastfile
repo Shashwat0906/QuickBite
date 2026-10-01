@@ -1,0 +1,60 @@
+# QuickBite fastlane lanes. Run from the ios/ folder:
+#
+#   bundle install
+#   bundle exec fastlane test      # unit + UI tests on the simulator
+#   bundle exec fastlane unit      # unit tests only (fast)
+#   bundle exec fastlane build     # Release build, no signing (sanity check)
+#   bundle exec fastlane beta      # signed build → TestFlight (needs setup, see docs/DEPLOYMENT.md)
+
+default_platform(:ios)
+
+WORKSPACE = "QuickBite.xcworkspace"
+SCHEME = "QuickBite"
+DEVICE = ENV.fetch("QB_TEST_DEVICE", "iPhone 16")
+
+platform :ios do
+  before_all do
+    # The .xcodeproj is generated from project.yml (XcodeGen) and not committed.
+    sh("cd .. && xcodegen generate")
+    cocoapods(podfile: "Podfile", try_repo_update_on_error: true)
+  end
+
+  desc "Unit + UI tests with code coverage"
+  lane :test do
+    run_tests(workspace: WORKSPACE, scheme: SCHEME, device: DEVICE, code_coverage: true, result_bundle: true, output_directory: "fastlane/test_output")
+  end
+
+  desc "Unit tests only"
+  lane :unit do
+    run_tests(workspace: WORKSPACE, scheme: SCHEME, device: DEVICE, only_testing: ["QuickBiteTests"], code_coverage: true)
+  end
+
+  desc "Release build without code signing (CI sanity check)"
+  lane :build do
+    build_app(
+      workspace: WORKSPACE,
+      scheme: SCHEME,
+      configuration: "Release",
+      skip_codesigning: true,
+      skip_archive: true,
+      skip_package_ipa: true,
+      destination: "generic/platform=iOS Simulator"
+    )
+  end
+
+  desc "Signed App Store build uploaded to TestFlight"
+  desc "Requires: App Store Connect API key (ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_CONTENT base64)"
+  desc "and signing via match (MATCH_GIT_URL, MATCH_PASSWORD) — see docs/DEPLOYMENT.md"
+  lane :beta do
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: ENV.fetch("ASC_KEY_CONTENT"),
+      is_key_content_base64: true
+    )
+    match(type: "appstore", readonly: is_ci, api_key: api_key)
+    increment_build_number(build_number: latest_testflight_build_number(api_key: api_key) + 1)
+    build_app(workspace: WORKSPACE, scheme: SCHEME, configuration: "Release", export_method: "app-store")
+    upload_to_testflight(api_key: api_key, skip_waiting_for_build_processing: true)
+  end
+end

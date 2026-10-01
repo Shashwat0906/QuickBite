@@ -1,5 +1,8 @@
 #include "Shared.xcconfig"
 
+// CocoaPods settings (PODS_ROOT etc.). Optional so the project still opens before `pod install`.
+#include? "../Pods/Target Support Files/Pods-QuickBite/Pods-QuickBite.release.xcconfig"
+
 // Deployed backend (see render.yaml). Change if your Render service URL differs.
 API_BASE_URL = https:/$()/quickbite-api.onrender.com
 

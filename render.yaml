@@ -1,0 +1,62 @@
+# Render Blueprint — one-click deploy of the QuickBite API + PostgreSQL.
+# Render dashboard → New → Blueprint → pick this repo → Apply.
+# Docs: https://render.com/docs/blueprint-spec
+
+databases:
+  - name: quickbite-db
+    plan: free
+    databaseName: quickbite
+    user: quickbite
+
+services:
+  - type: web
+    name: quickbite-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    # Install → apply migrations → seed the demo catalogue (seed is a no-op once data exists).
+    buildCommand: npm install && npx prisma migrate deploy && node prisma/seed.js
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: quickbite-db
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ADMIN_API_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: "*"
+      # Demo-friendly defaults for a portfolio deployment. Turn these off for a real launch.
+      - key: MOCK_PAYMENTS
+        value: "true"
+      - key: SOCIAL_LOGIN_DEMO
+        value: "true"
+      - key: DEMO_ORDER_PROGRESSION
+        value: "true"
+      - key: DEMO_STEP_SECONDS
+        value: "20"
+      - key: APPLE_BUNDLE_ID
+        value: com.quickbite.app
+      # Optional integrations — fill in from the Render dashboard (never commit them).
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_IDS
+        sync: false
+      - key: FCM_PROJECT_ID
+        sync: false
+      - key: FCM_CLIENT_EMAIL
+        sync: false
+      - key: FCM_PRIVATE_KEY
+        sync: false
