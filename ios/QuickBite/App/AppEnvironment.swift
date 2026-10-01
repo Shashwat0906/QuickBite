@@ -59,7 +59,7 @@ final class AppEnvironment {
 
         let apiConfig = APIClientConfiguration(baseURL: config.apiV1URL, logging: logging, defaultHeaders: ["X-Client": "QuickBite-iOS"])
         let refreshClient = URLSessionAPIClient(configuration: apiConfig, transport: transport)
-        let keychain = KeychainStore(service: config.isUITesting ? "com.quickbite.session.uitests" : "com.quickbite.session")
+        let keychain = KeychainStore(service: "com.quickbite.session", inMemory: config.isUITesting)
         if config.resetState { keychain.remove("tokens"); keychain.remove("user") }
         let session = SessionStore(keychain: keychain, refreshClient: refreshClient)
         self.session = session

@@ -5,12 +5,21 @@ import Security
 /// (tokens must never go in UserDefaults).
 struct KeychainStore {
     let service: String
+    /// In-memory backing used by tests and UI-test runs, so they never touch
+    /// the real Keychain (which can be slow or unavailable for unsigned builds).
+    private let memory: MemoryBox?
 
-    init(service: String = "com.quickbite.session") {
+    final class MemoryBox {
+        var values: [String: Data] = [:]
+    }
+
+    init(service: String = "com.quickbite.session", inMemory: Bool = false) {
         self.service = service
+        self.memory = inMemory ? MemoryBox() : nil
     }
 
     func set(_ data: Data, for key: String) {
+        if let memory { memory.values[key] = data; return }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -24,6 +33,7 @@ struct KeychainStore {
     }
 
     func data(for key: String) -> Data? {
+        if let memory { return memory.values[key] }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -37,6 +47,7 @@ struct KeychainStore {
     }
 
     func remove(_ key: String) {
+        if let memory { memory.values[key] = nil; return }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

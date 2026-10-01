@@ -131,7 +131,7 @@ struct FailingClient: APIClient {
 
 @MainActor
 func makeSession(signedIn: Bool = true) -> SessionStore {
-    let session = SessionStore(keychain: KeychainStore(service: "test.\(UUID().uuidString)"), refreshClient: FailingClient())
+    let session = SessionStore(keychain: KeychainStore(service: "test", inMemory: true), refreshClient: FailingClient())
     if signedIn { session.signIn(user: Fixtures.user, tokens: Fixtures.tokens) }
     return session
 }

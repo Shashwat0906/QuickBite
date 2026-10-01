@@ -55,6 +55,7 @@ jobs:
           path: ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
           key: spm-${{ hashFiles('ios/project.yml') }}
       - name: Build for testing
+        id: build
         if: steps.guard.outputs.ok == 'true'
         working-directory: ios
         run: |
@@ -71,9 +72,12 @@ jobs:
             -workspace QuickBite.xcworkspace -scheme QuickBite -destination "id=$SIM" \
             -derivedDataPath build -only-testing:QuickBiteTests -test-timeouts-enabled YES -default-test-execution-time-allowance 60 CODE_SIGNING_ALLOWED=NO
       - name: UI tests
-        if: steps.guard.outputs.ok == 'true'
+        if: (success() || failure()) && steps.build.outcome == 'success'
         working-directory: ios
         run: |
           ../ci/run-and-annotate.sh "UI tests" xcodebuild test-without-building \
             -workspace QuickBite.xcworkspace -scheme QuickBite -destination "id=$SIM" \
-            -derivedDataPath build -only-testing:QuickBiteUITests CODE_SIGNING_ALLOWED=NO
+            -derivedDataPath build -only-testing:QuickBiteUITests -test-timeouts-enabled YES -default-test-execution-time-allowance 120 CODE_SIGNING_ALLOWED=NO
+      - name: Failure details (xcresult + crash reports)
+        if: failure()
+        run: ci/xcresult-failures.sh ios/build "Failure details"
