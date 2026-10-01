@@ -45,18 +45,22 @@ jobs:
         run: npm run lint
 
       - name: Unit tests
-        run: npm run test:unit
+        run: |
+          set -o pipefail
+          npm run test:unit 2>&1 | tee unit.log
+          echo "::notice title=Unit tests::$(grep -E '^# (tests|pass|fail)' unit.log | tr '\n' ' ')"
 
       - name: Create schema and seed test database
         run: npm run test:prepare
 
       - name: Integration tests (real PostgreSQL + Socket.IO)
-        run: npm run test:integration
+        run: |
+          set -o pipefail
+          npm run test:integration 2>&1 | tee integration.log
+          echo "::notice title=Integration tests::$(grep -E '^# (tests|pass|fail)' integration.log | tr '\n' ' ')"
 
-      - name: Generate migration SQL from schema (artifact)
-        run: npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > migration.sql
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: migration-sql
-          path: backend/migration.sql
+      - name: Migrations are in sync with schema.prisma
+        run: |
+          psql "postgresql://quickbite:quickbite@localhost:5432/quickbite_test" -c "CREATE DATABASE quickbite_shadow"
+          npx prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma \
+            --shadow-database-url postgresql://quickbite:quickbite@localhost:5432/quickbite_shadow --exit-code
