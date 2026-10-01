@@ -2,23 +2,29 @@
 # Prints failing tests + messages from the newest .xcresult and the newest crash
 # report as a GitHub annotation (CI logs aren't always easy to reach).
 set -uo pipefail
-for R in $(ls -td "${1:-ios/build}"/Logs/Test/*.xcresult 2>/dev/null); do
-  failures=$(xcrun xcresulttool get test-results tests --path "$R" 2>/dev/null | python3 -c '
+out=""
+parser=$(mktemp)
+cat > "$parser" <<'PY'
 import json, sys
 try:
     data = json.load(sys.stdin)
-except Exception as e:
-    print("could not parse xcresult:", e); sys.exit(0)
+except Exception as exc:
+    print("could not parse xcresult:", exc)
+    sys.exit(0)
+
 def walk(node, test):
     if node.get("nodeType") == "Test Case":
         test = node.get("name", test)
     if node.get("nodeType") == "Failure Message":
-        print(f"{test}: {node.get(\"name\", \"\")}")
-    for child in node.get("children", []) or []:
+        print(test + ": " + node.get("name", ""))
+    for child in node.get("children") or []:
         walk(child, test)
+
 for n in data.get("testNodes", []):
     walk(n, "")
-' | head -n 30)
+PY
+for R in $(ls -td "${1:-ios/build}"/Logs/Test/*.xcresult 2>/dev/null); do
+  failures=$(xcrun xcresulttool get test-results tests --path "$R" 2>/dev/null | python3 "$parser" | head -n 30)
   [ -n "$failures" ] && out="${out}
 == $(basename "$R")
 ${failures}"
