@@ -382,7 +382,7 @@ final class CheckoutViewController: UIViewController {
             var config = UIButton.Configuration.plain()
             config.title = "\(address.label)"
             config.subtitle = address.fullText
-            config.image = UIImage(systemName: selected ? "largecircle.fill.circle" : "circle")
+            config.image = UIImage(systemName: selected ? "largecircle.fill.circle" : "circle")?.withTintColor(selected ? DK.Color.primary : DK.Color.textTertiary, renderingMode: .alwaysOriginal)
             config.imagePadding = DK.Spacing.m
             config.titleAlignment = .leading
             config.baseForegroundColor = DK.Color.textPrimary
@@ -421,7 +421,7 @@ final class CheckoutViewController: UIViewController {
             var config = UIButton.Configuration.plain()
             config.title = method.title + (method.isMock ? "  (DEMO)" : "")
             config.subtitle = method.subtitle
-            config.image = UIImage(systemName: selected ? "largecircle.fill.circle" : "circle")
+            config.image = UIImage(systemName: selected ? "largecircle.fill.circle" : "circle")?.withTintColor(selected ? DK.Color.primary : DK.Color.textTertiary, renderingMode: .alwaysOriginal)
             config.imagePadding = DK.Spacing.m
             config.titleAlignment = .leading
             config.baseForegroundColor = DK.Color.textPrimary

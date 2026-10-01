@@ -89,7 +89,7 @@ const CAFES = [
     image: I.cafeInterior, banner: I.latteArt, hours: ['06:00', '03:00'],
     menu: {
       Coffee: [
-        ['Signature Cappuccino', 'Double-shot espresso, velvety microfoam, a dusting of cocoa.', 18900, I.cappuccino, 'VEG', COFFEE, { best: true, pop: 940 }],
+        ['Signature Cappuccino', 'Double-shot espresso, velvety microfoam, a dusting of cocoa.', 18900, I.cappuccino2, 'VEG', COFFEE, { best: true, pop: 940 }],
         ['Flat White', 'Ristretto shots with silky steamed milk. Strong and smooth.', 19900, I.latteArt, 'VEG', COFFEE, { pop: 610 }],
         ['Caramel Latte', 'Espresso, steamed milk and house-made salted caramel.', 21900, I.latte, 'VEG', COFFEE, { pop: 520 }],
         ['Americano', 'Espresso lengthened with hot water. Clean and bold.', 14900, I.coffeeCup, 'VEG', COFFEE, { pop: 300 }],

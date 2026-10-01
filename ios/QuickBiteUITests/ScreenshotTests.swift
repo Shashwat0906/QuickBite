@@ -102,8 +102,9 @@ final class ScreenshotTests: XCTestCase {
         snap("12-tracking-progress", settle: 1)
 
         // Orders + profile
+        // Tapping the selected tab again pops it to its root (the orders list).
         app.tabBars.buttons.element(boundBy: 2).tap()
-        app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.tabBars.buttons.element(boundBy: 2).tap()
         snap("13-orders", settle: 2)
         app.tabBars.buttons.element(boundBy: 3).tap()
         snap("14-profile")

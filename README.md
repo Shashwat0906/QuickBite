@@ -35,6 +35,21 @@ move **live** from *Order placed* to *Delivered* on a step tracker and map → r
 | **Profile** | Edit profile, addresses, payment preference, notification settings + inbox, my reviews, appearance (light/dark/system), server switcher & health, logout, **in-app account deletion** |
 | **Push** | Firebase Cloud Messaging when configured; in-app banners + inbox as the fallback; notification taps deep-link to the order |
 
+## Screenshots
+
+Captured automatically by the [screenshots workflow](.github/workflows/screenshots.yml): the app running
+on an iPhone simulator against the **real backend** (PostgreSQL + Node), signed in with the demo account.
+
+| Home | Café menu | Customise | Cart |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/02-home.png" width="200"/> | <img src="docs/screenshots/04-cafe-menu.png" width="200"/> | <img src="docs/screenshots/05-customize.png" width="200"/> | <img src="docs/screenshots/06-cart.png" width="200"/> |
+| **Checkout** | **Demo payment** | **Order placed** | **Live tracking** |
+| <img src="docs/screenshots/08-checkout.png" width="200"/> | <img src="docs/screenshots/09-demo-payment.png" width="200"/> | <img src="docs/screenshots/10-order-placed.png" width="200"/> | <img src="docs/screenshots/11-tracking.png" width="200"/> |
+| **Onboarding** | **Sign in** | **More cafés** | **Tracking progress** |
+| <img src="docs/screenshots/01-onboarding.png" width="200"/> | <img src="docs/screenshots/07-login.png" width="200"/> | <img src="docs/screenshots/03-home-cafes.png" width="200"/> | <img src="docs/screenshots/12-tracking-progress.png" width="200"/> |
+
+🎬 Screen recording of the full flow: [`docs/media/demo.mp4`](docs/media/demo.mp4)
+
 ## Repository layout
 
 ```

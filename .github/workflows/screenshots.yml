@@ -63,12 +63,16 @@ jobs:
           TEST_RUNNER_QB_SCREENSHOT_DIR: ${{ github.workspace }}/docs/screenshots
         run: |
           mkdir -p ../docs/screenshots ../docs/media
-          xcrun simctl io "$SIM" recordVideo --codec h264 --force ../docs/media/demo.mp4 &
+          xcrun simctl io "$SIM" recordVideo --codec h264 --force /tmp/demo-raw.mp4 &
           REC=$!
           sleep 2
           ../ci/run-and-annotate.sh "Screenshots" xcodebuild test-without-building -workspace QuickBite.xcworkspace -scheme QuickBite \
             -destination "id=$SIM" -derivedDataPath build -only-testing:QuickBiteUITests/ScreenshotTests CODE_SIGNING_ALLOWED=NO || true
           kill -INT $REC; sleep 3
+          # Compress for the repo with macOS's built-in AVFoundation tool (~5–10 MB).
+          avconvert --preset Preset960x540 --source /tmp/demo-raw.mp4 --output ../docs/media/demo.mp4 --replace || cp /tmp/demo-raw.mp4 ../docs/media/demo.mp4
+          SIZE=$(stat -f%z ../docs/media/demo.mp4)
+          if [ "$SIZE" -gt 25000000 ]; then echo "video too large ($SIZE bytes), not committing"; rm ../docs/media/demo.mp4; fi
           ls -la ../docs/screenshots ../docs/media
           echo "::notice title=Captured::$(ls ../docs/screenshots | tr '\n' ' ')"
 
