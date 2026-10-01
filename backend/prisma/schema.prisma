@@ -1,0 +1,400 @@
+// QuickBite database schema
+// All money values are stored as integers in paise (1 INR = 100 paise) to avoid
+// floating-point rounding errors. The API converts nothing: clients receive paise
+// and format them for display.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  EMAIL
+  APPLE
+  GOOGLE
+}
+
+enum DietType {
+  VEG
+  NON_VEG
+  EGG
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PLACED
+  CONFIRMED
+  PREPARING
+  READY_FOR_PICKUP
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  CREATED
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  MOCK
+  CASH_ON_DELIVERY
+}
+
+enum CouponType {
+  FLAT
+  PERCENT
+}
+
+enum DevicePlatform {
+  IOS
+  ANDROID
+}
+
+// ---------------------------------------------------------------- Users & auth
+
+model User {
+  id                 String          @id @default(uuid())
+  name               String
+  email              String          @unique
+  phone              String?
+  passwordHash       String?
+  authProvider       AuthProvider    @default(EMAIL)
+  providerSubject    String?
+  role               String          @default("CUSTOMER") // CUSTOMER | ADMIN | CAFE_STAFF
+  notifyOrderUpdates Boolean         @default(true)
+  notifyPromotions   Boolean         @default(false)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  deletedAt          DateTime?
+
+  refreshTokens RefreshToken[]
+  addresses     Address[]
+  cart          Cart?
+  orders        Order[]
+  reviews       Review[]
+  notifications Notification[]
+  devices       DeviceToken[]
+
+  @@unique([authProvider, providerSubject])
+}
+
+// Refresh tokens are stored hashed so a database leak doesn't leak sessions.
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Address {
+  id        String   @id @default(uuid())
+  userId    String
+  label     String // "Home", "Work"
+  line1     String
+  line2     String?
+  city      String
+  pincode   String
+  latitude  Float
+  longitude Float
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------- Catalogue
+
+model Cafe {
+  id                   String   @id @default(uuid())
+  name                 String
+  slug                 String   @unique
+  description          String
+  imageUrl             String
+  bannerUrl            String
+  cuisines             String[]
+  rating               Float    @default(0)
+  ratingCount          Int      @default(0)
+  avgPrepMinutes       Int      @default(8)
+  deliveryFeePaise     Int      @default(2500)
+  minOrderPaise        Int      @default(9900)
+  latitude             Float
+  longitude            Float
+  addressLine          String
+  phone                String
+  isOpen               Boolean  @default(true)
+  opensAt              String   @default("08:00") // HH:mm, local time
+  closesAt             String   @default("23:00")
+  isFeatured           Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  categories MenuCategory[]
+  items      MenuItem[]
+  orders     Order[]
+  reviews    Review[]
+
+  @@index([isFeatured])
+}
+
+model MenuCategory {
+  id        String @id @default(uuid())
+  cafeId    String
+  name      String
+  sortOrder Int    @default(0)
+
+  cafe  Cafe       @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  items MenuItem[]
+
+  @@unique([cafeId, name])
+}
+
+model MenuItem {
+  id           String   @id @default(uuid())
+  cafeId       String
+  categoryId   String
+  name         String
+  description  String
+  imageUrl     String
+  pricePaise   Int
+  diet         DietType @default(VEG)
+  isAvailable  Boolean  @default(true)
+  isBestseller Boolean  @default(false)
+  popularity   Int      @default(0) // incremented on every order; drives "popular" sort
+  stock        Int? // null = unlimited
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  cafe              Cafe                  @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+  category          MenuCategory          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  customizations    CustomizationGroup[]
+  cartItems         CartItem[]
+  orderItems        OrderItem[]
+
+  @@index([cafeId])
+  @@index([categoryId])
+  @@index([name])
+}
+
+// "Size" (pick exactly 1) or "Extras" (pick 0..3) — a group of options for an item.
+model CustomizationGroup {
+  id         String  @id @default(uuid())
+  menuItemId String
+  name       String
+  minSelect  Int     @default(0)
+  maxSelect  Int     @default(1)
+  sortOrder  Int     @default(0)
+
+  menuItem MenuItem              @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  options  CustomizationOption[]
+
+  @@index([menuItemId])
+}
+
+model CustomizationOption {
+  id              String  @id @default(uuid())
+  groupId         String
+  name            String
+  extraPricePaise Int     @default(0)
+  isAvailable     Boolean @default(true)
+
+  group CustomizationGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+// ---------------------------------------------------------------- Cart
+
+// One server-side cart per user, mirrored locally by the app in Core Data.
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique
+  cafeId    String?
+  couponCode String?
+  updatedAt DateTime   @updatedAt
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+}
+
+model CartItem {
+  id         String   @id @default(uuid())
+  cartId     String
+  menuItemId String
+  quantity   Int
+  optionIds  String[] // selected CustomizationOption ids
+  // Same item with the same options = one line. Key is "<menuItemId>|<sorted optionIds>".
+  lineKey    String
+  createdAt  DateTime @default(now())
+
+  cart     Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, lineKey])
+}
+
+model Coupon {
+  id                String     @id @default(uuid())
+  code              String     @unique
+  description       String
+  type              CouponType
+  value             Int // paise for FLAT, percent for PERCENT
+  maxDiscountPaise  Int?
+  minOrderPaise     Int        @default(0)
+  validFrom         DateTime   @default(now())
+  validUntil        DateTime?
+  usageLimitPerUser Int        @default(1)
+  isActive          Boolean    @default(true)
+
+  orders Order[]
+}
+
+// ---------------------------------------------------------------- Orders & payments
+
+model Order {
+  id               String        @id @default(uuid())
+  orderNumber      String        @unique // human friendly, e.g. QB-7K2M9
+  userId           String
+  cafeId           String
+  addressId        String? // null once the user deletes that saved address
+  couponId         String?
+  status           OrderStatus   @default(PLACED)
+  paymentMethod    PaymentProvider
+  subtotalPaise    Int
+  deliveryFeePaise Int
+  taxPaise         Int
+  discountPaise    Int
+  totalPaise       Int
+  // Snapshot of the address so later edits don't rewrite history.
+  deliveryAddress  Json
+  estimatedMinutes Int
+  idempotencyKey   String
+  isDemoTracking   Boolean       @default(true)
+  cancelReason     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deliveredAt      DateTime?
+
+  user     User               @relation(fields: [userId], references: [id])
+  cafe     Cafe               @relation(fields: [cafeId], references: [id])
+  address  Address?           @relation(fields: [addressId], references: [id], onDelete: SetNull)
+  coupon   Coupon?            @relation(fields: [couponId], references: [id])
+  items    OrderItem[]
+  payments Payment[]
+  events   OrderStatusEvent[]
+  review   Review?
+
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
+  @@index([status])
+}
+
+model OrderItem {
+  id              String @id @default(uuid())
+  orderId         String
+  menuItemId      String
+  name            String // snapshot
+  unitPricePaise  Int // base + options at the moment of ordering
+  quantity        Int
+  options         Json // [{ id, name, extraPricePaise }]
+  lineTotalPaise  Int
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([orderId])
+}
+
+model OrderStatusEvent {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  createdAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// Card details never touch our database — only the provider's reference ids.
+model Payment {
+  id                String          @id @default(uuid())
+  orderId           String
+  provider          PaymentProvider
+  status            PaymentStatus   @default(CREATED)
+  amountPaise       Int
+  currency          String          @default("INR")
+  providerOrderId   String?         @unique
+  providerPaymentId String?
+  failureReason     String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------------- Feedback & notifications
+
+model Review {
+  id        String   @id @default(uuid())
+  orderId   String   @unique // one review per order, only for delivered orders
+  userId    String
+  cafeId    String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cafe  Cafe  @relation(fields: [cafeId], references: [id], onDelete: Cascade)
+
+  @@index([cafeId, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  orderId   String?
+  isRead    Boolean  @default(false)
+  pushSent  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model DeviceToken {
+  id        String         @id @default(uuid())
+  userId    String
+  token     String         @unique
+  platform  DevicePlatform @default(IOS)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

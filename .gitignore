@@ -1,0 +1,32 @@
+# macOS / Xcode
+.DS_Store
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+ios/QuickBite.xcodeproj/
+ios/QuickBite.xcworkspace/
+ios/Pods/
+ios/fastlane/report.xml
+ios/fastlane/test_output/
+ios/fastlane/Preview.html
+ios/fastlane/screenshots/**/*.png
+.swiftpm/
+.build/
+ios/QuickBite/Resources/GoogleService-Info.plist
+ios/QuickBite/Resources/Secrets.xcconfig
+
+# Node
+node_modules/
+npm-debug.log*
+.env
+.env.*
+!.env.example
+coverage/
+
+# Editors
+.vscode/
+.idea/
