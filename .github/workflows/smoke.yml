@@ -25,6 +25,8 @@ jobs:
       - run: npm install --no-audit --no-fund --ignore-scripts
       - name: Smoke test
         run: |
-          set -o pipefail
-          node scripts/smoke-test.js "${{ github.event.inputs.url || 'https://quickbite-api-0zul.onrender.com' }}" 2>&1 | tee smoke.log
-          echo "::notice title=Smoke test::$(grep -E '✅|❌|passed' smoke.log | tr '\n' ' ')"
+          node scripts/smoke-test.js "${{ github.event.inputs.url || 'https://quickbite-api-0zul.onrender.com' }}" > smoke.log 2>&1
+          status=$?
+          cat smoke.log
+          echo "::notice title=Smoke test::$(tr '\n' ' ' < smoke.log | cut -c1-3000)"
+          exit $status
