@@ -542,7 +542,7 @@ final class ServerSettingsViewController: UITableViewController {
     }
 
     private func promptURL() {
-        let alert = UIAlertController(title: "Server URL", message: "e.g. http://192.168.1.20:4000 or https://quickbite-api.onrender.com", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Server URL", message: "e.g. http://192.168.1.20:4000 or https://quickbite-api-0zul.onrender.com", preferredStyle: .alert)
         alert.addTextField { [weak self] field in
             field.text = self?.env.config.apiBaseURL.absoluteString
             field.keyboardType = .URL

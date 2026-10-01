@@ -172,7 +172,7 @@ custom controls. All tokens live in [`DesignKit/Tokens.swift`](ios/Packages/Desi
 | --- | --- |
 | Backend API + tests | ✅ Unit + integration tests pass in CI against PostgreSQL |
 | iOS build + unit/UI tests | See the **iOS CI** badge |
-| Backend deployment | Render blueprint ready — deploy with one click ([guide](docs/DEPLOYMENT.md)) |
+| Backend deployment | Live on Render: <https://quickbite-api-0zul.onrender.com/health> (free tier — first request after idle takes ~50 s) |
 | Razorpay | Integrated (test mode); needs your test keys. Demo provider used otherwise |
 | Push notifications | FCM integrated; needs your Firebase project + a real device |
 | TestFlight / App Store | fastlane lane configured, **not published** |

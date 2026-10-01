@@ -2,6 +2,20 @@
 
 ## Backend → Render (free tier)
 
+### Current deployment
+
+| Resource | Value |
+| --- | --- |
+| API | <https://quickbite-api-0zul.onrender.com> (health: `/health`) |
+| Service | `quickbite-api` · Node · Singapore · free · auto-deploys on push to `main` |
+| Database | `quickbite-db` · PostgreSQL 16 · Singapore · free (expires 30 days after creation — upgrade or recreate) |
+| Build | `cd backend && npm install && npx prisma migrate deploy && node prisma/seed.js` |
+| Start | `cd backend && npm start` |
+
+`DATABASE_URL` is the database's **Internal Database URL** (same region, so traffic stays on Render's private network).
+
+### Recreating it from scratch (Blueprint)
+
 The repo contains a [Render Blueprint](../render.yaml) that creates **a PostgreSQL database and
 the Node web service** together, wires `DATABASE_URL`, generates JWT/admin secrets, runs
 migrations and seeds demo data.
