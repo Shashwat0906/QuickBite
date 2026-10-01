@@ -236,7 +236,6 @@ public final class FoodItemCell: UICollectionViewCell {
         nameLabel.textColor = model.isAvailable ? DK.Color.textPrimary : DK.Color.textTertiary
         accessibilityIdentifier = "foodItem_\(model.name)"
         stepper.accessibilityIdentifier = "stepper_\(model.name)"
-        contentView.accessibilityElements = [nameLabel, priceLabel, descriptionLabel, stepper]
         nameLabel.accessibilityLabel = [model.name, model.isBestseller ? "Bestseller" : nil, model.isAvailable ? nil : "Currently unavailable"]
             .compactMap { $0 }.joined(separator: ", ")
     }

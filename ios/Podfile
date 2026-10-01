@@ -1,0 +1,29 @@
+# CocoaPods is used for exactly one dependency: the Razorpay checkout SDK,
+# which Razorpay distributes officially through CocoaPods.
+# Everything else (Firebase, Google Sign-In, our own NetworkKit / DesignKit)
+# comes from Swift Package Manager via project.yml.
+#
+#   brew install xcodegen cocoapods
+#   cd ios && xcodegen generate && pod install
+#   open QuickBite.xcworkspace
+
+platform :ios, '16.0'
+project 'QuickBite.xcodeproj'
+use_frameworks! :linkage => :static
+
+target 'QuickBite' do
+  pod 'razorpay-pod', '~> 1.4'
+
+  target 'QuickBiteTests' do
+    inherit! :search_paths
+  end
+end
+
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+    end
+  end
+end

@@ -1,0 +1,9 @@
+#include "Shared.xcconfig"
+
+// Simulator talks to the backend running on your Mac.
+// For a physical iPhone use your Mac's LAN IP, or the deployed Render URL.
+API_BASE_URL = http:/$()/localhost:4000
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG $(inherited)
+
+// Optional local overrides (git-ignored): copy Secrets.example.xcconfig.
+#include? "../QuickBite/Resources/Secrets.xcconfig"

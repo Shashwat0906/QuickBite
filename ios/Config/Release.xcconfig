@@ -1,0 +1,7 @@
+#include "Shared.xcconfig"
+
+// Deployed backend (see render.yaml). Change if your Render service URL differs.
+API_BASE_URL = https:/$()/quickbite-api.onrender.com
+
+// Optional local overrides (git-ignored): copy Secrets.example.xcconfig.
+#include? "../QuickBite/Resources/Secrets.xcconfig"

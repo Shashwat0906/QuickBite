@@ -1,0 +1,9 @@
+// Shared settings. Values here are read by Info.plist and AppConfiguration.
+// NOTE: "//" starts a comment in .xcconfig files, so URLs are written with
+// the $() trick: http:/$()/host
+
+// Google Sign-In OAuth client id (iOS type) from Google Cloud Console.
+// Leave empty to use the clearly labelled demo sign-in instead.
+GOOGLE_CLIENT_ID =
+GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.quickbite-unset
+

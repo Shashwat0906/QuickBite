@@ -1,0 +1,112 @@
+name: QuickBite
+
+options:
+  bundleIdPrefix: com.quickbite
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Set your Apple team id here (or in Xcode → Signing & Capabilities) to run on a device.
+    DEVELOPMENT_TEAM: ""
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+
+packages:
+  NetworkKit:
+    path: Packages/NetworkKit
+  DesignKit:
+    path: Packages/DesignKit
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: "11.0.0"
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: "8.0.0"
+
+targets:
+  QuickBite:
+    type: application
+    platform: iOS
+    sources:
+      - path: QuickBite
+        excludes:
+          - "**/*.md"
+    configFiles:
+      Debug: Config/Debug.xcconfig
+      Release: Config/Release.xcconfig
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.quickbite.app
+        PRODUCT_NAME: QuickBite
+        INFOPLIST_FILE: QuickBite/Resources/Info.plist
+        SWIFT_OBJC_BRIDGING_HEADER: QuickBite/ObjC/QuickBite-Bridging-Header.h
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: NO
+        CODE_SIGN_STYLE: Automatic
+        # Sign in with Apple + push entitlements. Simulator builds embed them
+        # without a provisioning profile; device builds need a paid team, so
+        # add the capabilities in Xcode when you set DEVELOPMENT_TEAM.
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]": QuickBite/Resources/QuickBite.entitlements
+        OTHER_LDFLAGS: $(inherited) -ObjC
+    dependencies:
+      - package: NetworkKit
+      - package: DesignKit
+      - package: Firebase
+        product: FirebaseMessaging
+      - package: GoogleSignIn
+        product: GoogleSignIn
+
+  QuickBiteTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: QuickBiteTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.quickbite.app.tests
+    dependencies:
+      - target: QuickBite
+
+  QuickBiteUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: QuickBiteUITests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.quickbite.app.uitests
+        TEST_TARGET_NAME: QuickBite
+    dependencies:
+      - target: QuickBite
+
+schemes:
+  QuickBite:
+    build:
+      targets:
+        QuickBite: all
+        QuickBiteTests: [test]
+        QuickBiteUITests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      coverageTargets:
+        - QuickBite
+      targets:
+        - name: QuickBiteTests
+          parallelizable: false
+        - name: QuickBiteUITests
+          parallelizable: false
+    archive:
+      config: Release
