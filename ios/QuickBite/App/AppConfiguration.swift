@@ -9,6 +9,8 @@ struct AppConfiguration {
     let isUITesting: Bool
     let resetState: Bool
     let skipOnboarding: Bool
+    /// UI tests / screenshot runs: never show system permission prompts (they'd block automation).
+    let suppressSystemPrompts: Bool
     let apiBaseURL: URL
     let googleClientID: String?
 
@@ -24,6 +26,7 @@ struct AppConfiguration {
             isUITesting: isUITesting,
             resetState: args.contains("-resetState"),
             skipOnboarding: args.contains("-skipOnboarding"),
+            suppressSystemPrompts: isUITesting || args.contains("-screenshots"),
             apiBaseURL: base,
             googleClientID: googleID
         )

@@ -31,7 +31,7 @@ final class QuickBiteUITests: XCTestCase {
         XCTAssertTrue(element("onboardingTitle_1").waitForExistence(timeout: 2))
         next.tap()
         XCTAssertTrue(element("onboardingTitle_2").waitForExistence(timeout: 2))
-        XCTAssertFalse(app.buttons["onboardingSkip"].isHittable, "Skip hides on the last page")
+        XCTAssertFalse(app.buttons["onboardingSkip"].exists, "Skip hides on the last page")
         next.tap() // "Get started" → sign in
         XCTAssertTrue(app.buttons["loginButton"].waitForExistence(timeout: 5))
     }

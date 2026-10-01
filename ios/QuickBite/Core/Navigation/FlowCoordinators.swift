@@ -81,7 +81,7 @@ final class CheckoutCoordinator: Coordinator {
 
     private func showConfirmation(_ order: OrderDetail) {
         // Ask for push permission at a meaningful moment (skipped in UI tests: the system alert would block them).
-        if !env.config.isUITesting { env.push.requestPermissionIfNeeded() }
+        if !env.config.suppressSystemPrompts { env.push.requestPermissionIfNeeded() }
         let done = OrderPlacedViewController(order: order)
         done.onTrack = { [weak self] in self?.finish(order.id) }
         nav.setViewControllers([done], animated: true)

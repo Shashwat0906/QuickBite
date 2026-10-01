@@ -1,0 +1,87 @@
+name: Screenshots & demo video
+
+# Run manually: Actions → "Screenshots & demo video" → Run workflow.
+# Boots PostgreSQL + the real backend on the macOS runner, runs the
+# ScreenshotTests UI test against it while recording the simulator, then
+# commits PNGs to docs/screenshots and the video to docs/media.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: macos-15
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PostgreSQL
+        run: |
+          brew install postgresql@16
+          brew services start postgresql@16
+          export PATH="$(brew --prefix postgresql@16)/bin:$PATH"
+          for i in $(seq 1 30); do pg_isready -h localhost && break; sleep 1; done
+          createuser -h localhost -s quickbite || true
+          createdb -h localhost -O quickbite quickbite
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Start backend (seeded, fast demo order progression)
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://quickbite@localhost:5432/quickbite
+          JWT_ACCESS_SECRET: screenshots-access
+          JWT_REFRESH_SECRET: screenshots-refresh
+          DEMO_STEP_SECONDS: "6"
+        run: |
+          npm install --no-audit --no-fund
+          npx prisma migrate deploy
+          node prisma/seed.js
+          nohup node src/server.js > ../server.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:4000/health && break; sleep 1; done
+
+      - name: Build app
+        working-directory: ios
+        run: |
+          brew install xcodegen
+          xcodegen generate
+          pod install
+          SIM=$(../ci/pick-simulator.sh)
+          echo "SIM=$SIM" >> "$GITHUB_ENV"
+          xcrun simctl boot "$SIM" || true
+          xcrun simctl status_bar "$SIM" override --time "9:41" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 || true
+          ../ci/run-and-annotate.sh "App build" xcodebuild build-for-testing -workspace QuickBite.xcworkspace -scheme QuickBite \
+            -destination "id=$SIM" -derivedDataPath build CODE_SIGNING_ALLOWED=NO -quiet
+
+      - name: Capture screenshots + video
+        working-directory: ios
+        env:
+          TEST_RUNNER_QB_SCREENSHOT_DIR: ${{ github.workspace }}/docs/screenshots
+        run: |
+          mkdir -p ../docs/screenshots ../docs/media
+          xcrun simctl io "$SIM" recordVideo --codec h264 --force ../docs/media/demo.mp4 &
+          REC=$!
+          sleep 2
+          ../ci/run-and-annotate.sh "Screenshots" xcodebuild test-without-building -workspace QuickBite.xcworkspace -scheme QuickBite \
+            -destination "id=$SIM" -derivedDataPath build -only-testing:QuickBiteUITests/ScreenshotTests CODE_SIGNING_ALLOWED=NO || true
+          kill -INT $REC; sleep 3
+          ls -la ../docs/screenshots ../docs/media
+          echo "::notice title=Captured::$(ls ../docs/screenshots | tr '\n' ' ')"
+
+      - name: Server log (on failure)
+        if: failure()
+        run: tail -n 80 server.log
+
+      - name: Commit media
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots docs/media
+          git diff --cached --quiet && { echo "nothing captured"; exit 0; }
+          git commit -m "docs: update screenshots and demo video [skip ci]"
+          git pull --rebase
+          git push

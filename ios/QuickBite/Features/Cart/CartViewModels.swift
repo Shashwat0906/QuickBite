@@ -204,12 +204,20 @@ final class CheckoutViewModel {
         loadError = nil
         onChange?()
         do {
-            async let addressesResult = addressService.list()
-            async let methodsResult = paymentService.methods()
-            async let priced = cartService.sync(lines: cart.syncLines, couponCode: cart.couponCode)
-            addresses = try await addressesResult
-            methods = try await methodsResult
-            pricedCart = try await priced
+            // Three independent requests run in parallel. (Unstructured tasks over
+            // values captured on the main actor, instead of `async let` inside this
+            // @MainActor type — that combination crashed the Swift runtime in CI.)
+            let addressService = self.addressService
+            let paymentService = self.paymentService
+            let cartService = self.cartService
+            let lines = cart.syncLines
+            let coupon = cart.couponCode
+            let addressesTask = Task { try await addressService.list() }
+            let methodsTask = Task { try await paymentService.methods() }
+            let pricedTask = Task { try await cartService.sync(lines: lines, couponCode: coupon) }
+            addresses = try await addressesTask.value
+            methods = try await methodsTask.value
+            pricedCart = try await pricedTask.value
             let preferred = locationStore.current.addressId
             selectedAddress = addresses.first { $0.id == preferred } ?? addresses.first { $0.isDefault } ?? addresses.first
             let savedMethod = UserDefaults.standard.string(forKey: PaymentPreferences.defaultsKey)

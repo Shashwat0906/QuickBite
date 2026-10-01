@@ -42,7 +42,11 @@ final class AppCoordinator: Coordinator {
     private func finishOnboarding(thenSignIn: Bool) {
         env.hasSeenOnboarding = true
         showMain(animated: true)
-        if thenSignIn { main?.requireSignIn(reason: "Sign in to order from cafes near you") {} }
+        guard thenSignIn else { return }
+        // Present after the root-controller swap has finished.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            self?.main?.requireSignIn(reason: "Sign in to order from cafes near you") {}
+        }
     }
 
     private func showMain(animated: Bool) {

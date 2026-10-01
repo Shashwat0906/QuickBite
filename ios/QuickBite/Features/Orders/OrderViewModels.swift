@@ -117,10 +117,8 @@ final class OrderTrackingViewModel {
 
     func refresh() async {
         do {
-            async let detail = orders.order(id: orderId)
-            async let snapshot = orders.tracking(id: orderId)
-            order = try await detail
-            tracking = try await snapshot
+            order = try await orders.order(id: orderId)
+            tracking = try await orders.tracking(id: orderId)
             rider = tracking?.rider ?? rider
             error = nil
         } catch {
