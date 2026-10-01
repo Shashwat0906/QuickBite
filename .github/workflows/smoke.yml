@@ -1,0 +1,30 @@
+name: Smoke test (live API)
+
+# Exercises the deployed backend end to end: register → cart → order → pay →
+# live Socket.IO updates. Runs after deploys can be checked from the Actions tab.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: API base URL
+        default: https://quickbite-api-0zul.onrender.com
+  schedule:
+    - cron: '17 6 * * 1'   # weekly, Monday 11:47 IST — also keeps an eye on the free instance
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund --ignore-scripts
+      - name: Smoke test
+        run: |
+          set -o pipefail
+          node scripts/smoke-test.js "${{ github.event.inputs.url || 'https://quickbite-api-0zul.onrender.com' }}" 2>&1 | tee smoke.log
+          echo "::notice title=Smoke test::$(grep -E '✅|❌|passed' smoke.log | tr '\n' ' ')"
