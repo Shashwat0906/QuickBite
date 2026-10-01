@@ -86,7 +86,7 @@ const CAFES = [
     name: 'Brew & Bloom', slug: 'brew-and-bloom', featured: true, lat: 28.6328, lng: 77.2197,
     address: 'N-Block, Connaught Place, New Delhi', phone: '+911140001111', prep: 7, fee: 2500, min: 14900, rating: 4.6, ratingCount: 1240,
     description: 'Specialty coffee, all-day breakfast and fresh bakes in the heart of CP.', cuisines: ['coffee', 'breakfast', 'bakery'],
-    image: I.cafeInterior, banner: I.latteArt, hours: ['06:00', '03:00'],
+    image: I.cafeInterior, banner: I.latteArt, hours: ['00:00', '23:59'],
     menu: {
       Coffee: [
         ['Signature Cappuccino', 'Double-shot espresso, velvety microfoam, a dusting of cocoa.', 18900, I.cappuccino2, 'VEG', COFFEE, { best: true, pop: 940 }],
@@ -113,7 +113,7 @@ const CAFES = [
     name: 'Ember Roastery', slug: 'ember-roastery', featured: true, lat: 28.6003, lng: 77.2270,
     address: 'Middle Lane, Khan Market, New Delhi', phone: '+911140002222', prep: 6, fee: 2000, min: 12900, rating: 4.7, ratingCount: 860,
     description: 'Single-origin Indian coffees roasted in-house, with light bites.', cuisines: ['coffee', 'sandwiches', 'desserts'],
-    image: I.cafeCounter, banner: I.beans, hours: ['07:00', '02:00'],
+    image: I.cafeCounter, banner: I.beans, hours: ['00:00', '23:59'],
     menu: {
       Coffee: [
         ['Chikmagalur Pour Over', 'Hand-brewed single origin with notes of jaggery and citrus.', 24900, I.coffee, 'VEG', [], { best: true, pop: 400 }],
