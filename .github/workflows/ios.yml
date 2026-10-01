@@ -1,0 +1,72 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['ios/**', 'ci/**', '.github/workflows/ios.yml']
+  pull_request:
+    paths: ['ios/**', 'ci/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  packages:
+    name: Swift packages (NetworkKit, DesignKit)
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode version
+        run: xcodebuild -version
+      - name: NetworkKit — swift test
+        working-directory: ios/Packages/NetworkKit
+        run: ../../../ci/run-and-annotate.sh "NetworkKit tests" swift test
+      - name: DesignKit — tests on iOS Simulator
+        working-directory: ios/Packages/DesignKit
+        run: |
+          SIM=$(../../../ci/pick-simulator.sh)
+          ../../../ci/run-and-annotate.sh "DesignKit tests" xcodebuild test -scheme DesignKit -destination "id=$SIM" -quiet
+
+  app:
+    name: App build + unit tests + UI tests
+    needs: packages
+    if: ${{ hashFiles('ios/QuickBite/App/AppDelegate.swift') != '' }}
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate project + install pods
+        working-directory: ios
+        run: |
+          xcodegen generate
+          pod install --repo-update
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+          key: spm-${{ hashFiles('ios/project.yml') }}
+      - name: Build for testing
+        working-directory: ios
+        run: |
+          SIM=$(../ci/pick-simulator.sh)
+          echo "SIM=$SIM" >> "$GITHUB_ENV"
+          ../ci/run-and-annotate.sh "App build" xcodebuild build-for-testing \
+            -workspace QuickBite.xcworkspace -scheme QuickBite -destination "id=$SIM" \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO -quiet
+      - name: Unit tests
+        working-directory: ios
+        run: |
+          ../ci/run-and-annotate.sh "Unit tests" xcodebuild test-without-building \
+            -workspace QuickBite.xcworkspace -scheme QuickBite -destination "id=$SIM" \
+            -derivedDataPath build -only-testing:QuickBiteTests CODE_SIGNING_ALLOWED=NO
+      - name: UI tests
+        working-directory: ios
+        run: |
+          ../ci/run-and-annotate.sh "UI tests" xcodebuild test-without-building \
+            -workspace QuickBite.xcworkspace -scheme QuickBite -destination "id=$SIM" \
+            -derivedDataPath build -only-testing:QuickBiteUITests CODE_SIGNING_ALLOWED=NO
