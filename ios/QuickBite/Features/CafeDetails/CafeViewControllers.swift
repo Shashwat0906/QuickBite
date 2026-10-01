@@ -1,5 +1,6 @@
 import UIKit
 import DesignKit
+import NetworkKit
 
 /// Cafe page: banner, info card, veg toggle, category jump menu and the menu.
 final class CafeDetailViewController: UIViewController, UICollectionViewDelegate {
