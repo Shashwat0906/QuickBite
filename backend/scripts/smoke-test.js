@@ -77,10 +77,13 @@ async function call(method, path, { token, body } = {}) {
   check('demo payment → PLACED', paid.body.order.status === 'PLACED');
 
   // Wait for the demo worker to advance the order (DEMO_STEP_SECONDS on the server).
+  const flow = ['PLACED', 'CONFIRMED', 'PREPARING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED'];
   const deadline = Date.now() + 90000;
-  while (Date.now() < deadline && !statuses.includes('CONFIRMED')) await new Promise((r) => setTimeout(r, 1000));
+  while (Date.now() < deadline && statuses.filter((s) => s !== 'PLACED').length < 2) await new Promise((r) => setTimeout(r, 1000));
   socket.close();
-  check('live status over Socket.IO', statuses.includes('CONFIRMED'), `received: ${statuses.join(' → ')}`);
+  const indexes = statuses.map((s) => flow.indexOf(s));
+  const inOrder = indexes.every((v, i) => i === 0 || v > indexes[i - 1]);
+  check('live status updates over Socket.IO (in order)', statuses.filter((s) => s !== 'PLACED').length >= 2 && inOrder, `received: ${statuses.join(' → ')}`);
 
   const tracking = await call('GET', `/orders/${order.body.order.id}/tracking`, { token });
   check('tracking snapshot', tracking.status === 200 && tracking.body.isDemoTracking === true, `status ${tracking.body.status}, ETA ${tracking.body.estimatedMinutes} min`);
