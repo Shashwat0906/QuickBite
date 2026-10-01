@@ -110,6 +110,11 @@ public final class RemoteImageView: UIImageView {
         isAccessibilityElement = false
     }
 
+    /// UIImageView subclasses don't inherit `init()`, so provide it explicitly.
+    public convenience init() {
+        self.init(frame: .zero)
+    }
+
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 

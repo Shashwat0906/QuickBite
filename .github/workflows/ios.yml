@@ -32,7 +32,6 @@ jobs:
 
   app:
     name: App build + unit tests + UI tests
-    needs: packages
     runs-on: macos-15
     timeout-minutes: 60
     steps:
