@@ -82,8 +82,8 @@ jobs:
 
       - name: Commit media
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "Shashwat0906"
+          git config user.email "151515567+Shashwat0906@users.noreply.github.com"
           git add docs/screenshots docs/media
           git diff --cached --quiet && { echo "nothing captured"; exit 0; }
           git commit -m "docs: update screenshots and demo video [skip ci]"

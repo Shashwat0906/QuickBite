@@ -42,8 +42,8 @@ jobs:
       - name: Commit
         working-directory: .
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "Shashwat0906"
+          git config user.email "151515567+Shashwat0906@users.noreply.github.com"
           git add backend/prisma/migrations
           git diff --cached --quiet && exit 0
           git commit -m "chore(db): add Prisma migration ${{ github.event.inputs.name }}"
