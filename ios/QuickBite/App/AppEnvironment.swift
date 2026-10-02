@@ -57,7 +57,8 @@ final class AppEnvironment {
         let logging = false
         #endif
 
-        let apiConfig = APIClientConfiguration(baseURL: config.apiV1URL, logging: logging, defaultHeaders: ["X-Client": "QuickBite-iOS"])
+        // 30 s × (1 + 2 retries) comfortably covers a free-tier Render instance waking up (~50 s).
+        let apiConfig = APIClientConfiguration(baseURL: config.apiV1URL, defaultTimeout: 30, logging: logging, defaultHeaders: ["X-Client": "QuickBite-iOS"])
         let refreshClient = URLSessionAPIClient(configuration: apiConfig, transport: transport)
         let keychain = KeychainStore(service: "com.quickbite.session", inMemory: config.isUITesting)
         if config.resetState { keychain.remove("tokens"); keychain.remove("user") }

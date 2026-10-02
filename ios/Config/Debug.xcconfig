@@ -3,9 +3,12 @@
 // CocoaPods settings (PODS_ROOT etc.). Optional so the project still opens before `pod install`.
 #include? "../Pods/Target Support Files/Pods-QuickBite/Pods-QuickBite.debug.xcconfig"
 
-// Simulator talks to the backend running on your Mac.
-// For a physical iPhone use your Mac's LAN IP, or the deployed Render URL.
-API_BASE_URL = http:/$()/localhost:4000
+// Default: the live backend on Render, so anyone who clones the repo and
+// presses Run gets a working app without setting up a server.
+// To use a backend running on your Mac instead, change this to
+//   http:/$()/localhost:4000
+// or switch in the app: Profile → Server & diagnostics → Change server URL.
+API_BASE_URL = https:/$()/quickbite-api-0zul.onrender.com
 SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG $(inherited)
 
 // Optional local overrides (git-ignored): copy Secrets.example.xcconfig.

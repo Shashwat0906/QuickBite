@@ -16,6 +16,27 @@ Node.js · Express · PostgreSQL · Prisma · Socket.IO · JWT · Razorpay (test
 
 ---
 
+## ▶️ Run it in 5 minutes (for reviewers)
+
+You only need a **Mac with Xcode 16+**. The backend is already deployed, so there's no server to set up.
+
+```bash
+brew install xcodegen cocoapods          # one-time tools
+git clone https://github.com/Shashwat0906/QuickBite.git
+cd QuickBite/ios
+xcodegen generate && pod install
+open QuickBite.xcworkspace               # the .xcworkspace, not the .xcodeproj
+```
+
+Choose any **iPhone simulator** and press **⌘R**. The first build downloads packages and takes a few minutes.
+
+* Sign in with **demo@quickbite.app / Demo@1234**, or browse as a guest.
+* Try this: open **Brew & Bloom** → customise a cappuccino → cart → coupon **WELCOME50** → checkout →
+  **Demo payment** → *Simulate success* → watch the order move to *Delivered* live (one step every ~20 s).
+* The app talks to the live API at <https://quickbite-api-0zul.onrender.com> ([health](https://quickbite-api-0zul.onrender.com/health)).
+  It runs on Render's free tier, so if it has been idle the very first screen can take up to a minute to load.
+* No Mac? See the [screenshots](#screenshots) and the [screen recording](docs/media/demo.mp4).
+
 ## What it does
 
 Browse cafés near you → open a menu → customise a cappuccino (size, milk, extras) → add to cart
@@ -70,7 +91,7 @@ QuickBite/
 └── .github/workflows/  backend CI · iOS CI · migration generator
 ```
 
-## Quick start
+## Quick start (full local setup)
 
 ### 1. Backend (Node 20+, PostgreSQL 14+)
 
@@ -108,9 +129,9 @@ pod install                        # Razorpay SDK → creates QuickBite.xcworksp
 open QuickBite.xcworkspace
 ```
 
-Pick an iPhone simulator and press **⌘R**. Debug builds talk to `http://localhost:4000`; to use
-the deployed server, change it in-app (**Profile → Server & diagnostics**) or in
-`ios/Config/Release.xcconfig`.
+Pick an iPhone simulator and press **⌘R**. Builds talk to the live Render API by default. To use
+the backend from step 1 instead, set `API_BASE_URL` to `http:/$()/localhost:4000` in
+`ios/Config/Debug.xcconfig`, or switch in the app (**Profile → Server & diagnostics**).
 
 Everything works without any third-party keys: payments use the **demo provider** (labelled
 "DEMO" everywhere), Google/Apple sign-in offer a **demo sign-in** when not configured, and
