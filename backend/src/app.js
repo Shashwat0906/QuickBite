@@ -60,7 +60,15 @@ function createApp() {
   v1.use('/admin', require('./routes/admin'));
   app.use('/api/v1', v1);
 
-  app.get('/', (_req, res) => res.json({ name: 'QuickBite API', docs: 'https://github.com/ (see docs/API.md)', health: '/health' }));
+  app.get('/', (_req, res) => res.json({
+    name: 'QuickBite API',
+    description: 'Backend for the QuickBite iOS app (café ordering & 10-minute delivery)',
+    status: 'running',
+    health: '/health',
+    apiBase: '/api/v1',
+    docs: 'https://github.com/Shashwat0906/QuickBite/blob/main/docs/API.md',
+    source: 'https://github.com/Shashwat0906/QuickBite',
+  }));
 
   app.use(notFoundHandler);
   app.use(errorHandler);
